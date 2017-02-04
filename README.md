@@ -1,4 +1,4 @@
-# IImplementation of Gentle BLUE in ns-3 
+# Implementation of Gentle BLUE in ns-3 
 ##Course Code: CS890
 
 ###Overview
