@@ -263,6 +263,26 @@ void BlueQueueDisc::DecrementPmark (void)
     }
 }
 
+void UpdatePmark (void)
+{
+  NS_LOG_FUNCTION (this);
+  Time now = Simulator::Now ();
+  if()
+
+
+  2. if(q_th> 0 &&q_th<= Th)
+3. {if (C_time _of the l_ajd>f_time){
+4. DP = (q_th/Th ) * ((C-Th)/C) * (1-initDP)
+5. L_adj = current}
+6. Else{ if( q_th>Th&&q_th<C){
+7. DP = ((C-Th)/C) *(1-initDP) + (q_th/C) *(1-((C-
+Th)/C) *(1-initDP)
+8. L_adj = current}}
+9. Else
+10. {DP = 1 //means all arrival packet will be dropped
+11. L_adj = current}
+}
+
 Ptr<QueueDiscItem>
 BlueQueueDisc::DoDequeue (void)
 {

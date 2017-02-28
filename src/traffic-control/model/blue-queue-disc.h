@@ -142,6 +142,11 @@ protected:
   virtual void DecrementPmark (void);
 
   /**
+   * \brief update the m_Pmark based on Gentle-BLUE
+   */
+  virtual void UpdatePmark (void);
+
+  /**
    * \brief Check if a packet needs to be dropped due to probability drop
    * \returns false for no drop, true for drop
    */
@@ -164,6 +169,11 @@ private:
   Time m_lastUpdateTime;                        //!< last time at which Pmark was updated
   Time m_idleStartTime;                         //!< Time when BLUE Queue Disc entered the idle period
   bool m_isIdle;                                //!< True if queue is Idle
+
+  // ** Variables maintained by Gentle-BLUE
+  bool m_isGentleBlue;                          //!< True to enable Feng's Adaptive RED
+  double m_initPmark;                           //!< Initial Marking Probability
+  double m_threshold;                           //!< 
 };
 
 } // namespace ns3
