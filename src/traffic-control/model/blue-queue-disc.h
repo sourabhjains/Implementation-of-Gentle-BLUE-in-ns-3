@@ -163,6 +163,7 @@ private:
   // ** Variables maintained by BLUE
   Time m_lastUpdateTime;                        //!< last time at which Pmark was updated
   Time m_idleStartTime;                         //!< Time when BLUE Queue Disc entered the idle period
+  bool m_isIdle;                                //!< True if queue is Idle
 };
 
 } // namespace ns3
