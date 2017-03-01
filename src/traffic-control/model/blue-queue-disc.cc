@@ -284,7 +284,7 @@ void BlueQueueDisc::UpdatePmark (void)
   Time now = Simulator::Now ();
   uint32_t nQueued = GetQueueSize ();
   double thresholdQueueLimit = m_queueLimit * m_threshold;
-  if(nQueued > 0 && nQueued <= thresoldQueueLimit)
+  if(nQueued > 0 && nQueued <= thresholdQueueLimit)
   {
     if(now - m_lastUpdateTime > m_freezeTime)
     {
