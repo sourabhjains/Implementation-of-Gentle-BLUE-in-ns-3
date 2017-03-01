@@ -283,18 +283,18 @@ void BlueQueueDisc::UpdatePmark (void)
   NS_LOG_FUNCTION (this);
   Time now = Simulator::Now ();
   uint32_t nQueued = GetQueueSize ();
-  double thresoldQueueLimit = m_queueLimit * m_threshold;
+  double thresholdQueueLimit = m_queueLimit * m_threshold;
   if(nQueued > 0 && nQueued <= thresoldQueueLimit)
   {
     if(now - m_lastUpdateTime > m_freezeTime)
     {
-      m_pmark = ((nQueued / thresoldQueueLimit) * ((m_queueLimit - thresholdQueueLimit) / m_queueLimit) * (1 - m_initPmark));
+      m_Pmark = ((nQueued / thresoldQueueLimit) * ((m_queueLimit - thresholdQueueLimit) / m_queueLimit) * (1 - m_initPmark));
       m_lastUpdateTime = now;
     } 
   }
   else if(nQueued > thresoldQueueLimit && nQueued < m_queueLimit)
     {
-      m_pmark = ((m_queueLimit - thresholdQueueLimit) / m_queueLimit) * (1 - m_initPmark) + (nQueued / m_queueLimit) * (1 - (m_queueLimit - thresholdQueueLimit)) * (1 - m_initPmark);
+      m_Pmark = ((m_queueLimit - thresholdQueueLimit) / m_queueLimit) * (1 - m_initPmark) + (nQueued / m_queueLimit) * (1 - (m_queueLimit - thresholdQueueLimit)) * (1 - m_initPmark);
       m_lastUpdateTime = now;
     }
   else
