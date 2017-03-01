@@ -299,7 +299,7 @@ void BlueQueueDisc::UpdatePmark (void)
     }
   else
   {
-    m_pmark = 1.0;
+    m_Pmark = 1.0;
     m_lastUpdateTime = now;
   }
 }
