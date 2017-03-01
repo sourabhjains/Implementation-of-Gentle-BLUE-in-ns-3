@@ -90,7 +90,7 @@ TypeId BlueQueueDisc::GetTypeId (void)
     .AddAttribute ("GentleBlue",
                    "True to enable Gentle BLUE",
                    BooleanValue (false),
-                   MakeBooleanAccessor (&RedQueueDisc::m_isGentleBlue),
+                   MakeBooleanAccessor (&BlueQueueDisc::m_isGentleBlue),
                    MakeBooleanChecker ())
   ;
 
@@ -278,7 +278,7 @@ void BlueQueueDisc::DecrementPmark (void)
     }
 }
 
-void UpdatePmark (void)
+void BlueQueueDisc::UpdatePmark (void)
 {
   NS_LOG_FUNCTION (this);
   Time now = Simulator::Now ();
