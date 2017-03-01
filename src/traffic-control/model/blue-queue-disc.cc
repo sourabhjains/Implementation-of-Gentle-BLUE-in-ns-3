@@ -288,7 +288,7 @@ void BlueQueueDisc::UpdatePmark (void)
   {
     if(now - m_lastUpdateTime > m_freezeTime)
     {
-      m_Pmark = ((nQueued / thresoldQueueLimit) * ((m_queueLimit - thresholdQueueLimit) / m_queueLimit) * (1 - m_initPmark));
+      m_Pmark = ((nQueued / thresholdQueueLimit) * ((m_queueLimit - thresholdQueueLimit) / m_queueLimit) * (1 - m_initPmark));
       m_lastUpdateTime = now;
     } 
   }
