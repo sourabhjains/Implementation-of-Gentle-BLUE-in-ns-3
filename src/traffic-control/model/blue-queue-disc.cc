@@ -15,8 +15,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * Authors: Vivek Jain <jain.vivek.anand@gmail.com>
- *          Sandeep Singh <hisandeepsingh@hotmail.com>
+ * Authors: Sourabh Jain <sourabhjain560@outlook.com>
  *          Mohit P. Tahiliani <tahiliani@nitk.edu.in>
  */
 
@@ -64,17 +63,17 @@ TypeId BlueQueueDisc::GetTypeId (void)
                    MakeUintegerChecker<uint32_t> ())
     .AddAttribute ("Increment",
                    "Pmark increment value",
-                   DoubleValue (0.0025),
+                   DoubleValue (1.0),
                    MakeDoubleAccessor (&BlueQueueDisc::m_increment),
                    MakeDoubleChecker<double> ())
     .AddAttribute ("Decrement",
                    "Pmark decrement Value",
-                   DoubleValue (0.00025),
+                   DoubleValue (0.25),
                    MakeDoubleAccessor (&BlueQueueDisc::m_decrement),
                    MakeDoubleChecker<double> ())
     .AddAttribute ("FreezeTime",
                    "Time interval during which Pmark cannot be updated",
-                   TimeValue (Seconds (0.1)),
+                   TimeValue (Seconds (0.01)),
                    MakeTimeAccessor (&BlueQueueDisc::m_freezeTime),
                    MakeTimeChecker ())
     .AddAttribute ("Thresold",
@@ -84,7 +83,7 @@ TypeId BlueQueueDisc::GetTypeId (void)
                    MakeDoubleChecker<double> ())
     .AddAttribute ("IntiPmark",
                    "Initial Marking Probability",
-                   DoubleValue (0),
+                   DoubleValue (0.15),
                    MakeDoubleAccessor (&BlueQueueDisc::m_initPmark),
                    MakeDoubleChecker<double> ())
     .AddAttribute ("GentleBlue",
@@ -178,42 +177,78 @@ BlueQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
 
   uint32_t nQueued = GetQueueSize ();
 
-  if (m_isIdle)
+  if(m_isGentleBlue)
+  {
+    UpdatePmark ();
+
+    // Drop due to queue limit: reactive
+    if(m_Pmark == 1.0)
+    {
+      m_stats.forcedDrop++;
+
+      Drop (item);
+      return false;
+        std::cout<<"Packet Dropped"<<std::endl;
+    }
+    else
+    {
+      if(DropEarly ())
+      {
+        m_stats.unforcedDrop++;
+        std::cout<<"Packet Dropped"<<std::endl;
+        Drop (item);
+        return false;
+      }
+         std::cout<<"Packet Enqueued"<<std::endl;
+      // No drop
+      bool isEnqueued = GetInternalQueue (0)->Enqueue (item);
+
+      NS_LOG_LOGIC ("\t bytesInQueue  " << GetInternalQueue (0)->GetNBytes ());
+      NS_LOG_LOGIC ("\t packetsInQueue  " << GetInternalQueue (0)->GetNPackets ());
+
+      return isEnqueued;
+    }
+  }
+  else
+  {
+          std::cout<<nQueued<<std::endl;
+    if (m_isIdle)
     {
       DecrementPmark ();
       m_isIdle = false; // not idle anymore
     }
 
-  if ((GetMode () == Queue::QUEUE_MODE_PACKETS && nQueued >= m_queueLimit)
-      || (GetMode () == Queue::QUEUE_MODE_BYTES && nQueued + item->GetPacketSize () > m_queueLimit))
-    {
-      // Increment the Pmark
-      IncrementPmark ();
+    if ((GetMode () == Queue::QUEUE_MODE_PACKETS && nQueued >= m_queueLimit)
+        || (GetMode () == Queue::QUEUE_MODE_BYTES && nQueued + item->GetPacketSize () > m_queueLimit))
+      {
+        // Increment the Pmark
+        IncrementPmark ();
 
-      // Drops due to queue limit: reactive
-      m_stats.forcedDrop++;
+        // Drops due to queue limit: reactive
+        m_stats.forcedDrop++;
 
-      Drop (item);
-      return false;
-    }
-  else if (DropEarly ())
-    {
-      // Increment the Pmark
-      IncrementPmark ();
+       Drop (item);
+       return false;
+      }
+    else if (DropEarly ())
+       {
+         // Increment the Pmark
+         IncrementPmark ();
 
-      // Early probability drop: proactive
-      m_stats.unforcedDrop++;
-      Drop (item);
-      return false;
-    }
+         // Early probability drop: proactive
+         m_stats.unforcedDrop++;
+         Drop (item);
+         return false;
+       }
 
-  // No drop
-  bool isEnqueued = GetInternalQueue (0)->Enqueue (item);
+    // No drop
+    bool isEnqueued = GetInternalQueue (0)->Enqueue (item);
 
-  NS_LOG_LOGIC ("\t bytesInQueue  " << GetInternalQueue (0)->GetNBytes ());
-  NS_LOG_LOGIC ("\t packetsInQueue  " << GetInternalQueue (0)->GetNPackets ());
+    NS_LOG_LOGIC ("\t bytesInQueue  " << GetInternalQueue (0)->GetNBytes ());
+    NS_LOG_LOGIC ("\t packetsInQueue  " << GetInternalQueue (0)->GetNPackets ());
 
-  return isEnqueued;
+    return isEnqueued;
+  }
 }
 
 void
@@ -276,7 +311,7 @@ void BlueQueueDisc::DecrementPmark (void)
           m_Pmark = 0.0;
         }
     }
-}
+}       
 
 void BlueQueueDisc::UpdatePmark (void)
 {
@@ -284,22 +319,23 @@ void BlueQueueDisc::UpdatePmark (void)
   Time now = Simulator::Now ();
   uint32_t nQueued = GetQueueSize ();
   double thresholdQueueLimit = m_queueLimit * m_threshold;
-  if(nQueued > 0 && nQueued <= thresholdQueueLimit)
+  double reverseInitPmark = 1 - m_initPmark;
+  if(nQueued >= 0 && nQueued <= thresholdQueueLimit)
   {
-    if(now - m_lastUpdateTime > m_freezeTime)
-    {
-      m_Pmark = ((nQueued / thresholdQueueLimit) * ((m_queueLimit - thresholdQueueLimit) / m_queueLimit) * (1 - m_initPmark));
+//    if(now - m_lastUpdateTime > m_freezeTime)
+//    {
+      m_Pmark = ((nQueued / thresholdQueueLimit) * ((m_queueLimit - thresholdQueueLimit) / m_queueLimit) * (reverseInitPmark));
       m_lastUpdateTime = now;
-    } 
+//    } 
   }
   else if(nQueued > thresholdQueueLimit && nQueued < m_queueLimit)
     {
-      m_Pmark = ((m_queueLimit - thresholdQueueLimit) / m_queueLimit) * (1 - m_initPmark) + (nQueued / m_queueLimit) * (1 - (m_queueLimit - thresholdQueueLimit)) * (1 - m_initPmark);
+      m_Pmark = ((m_queueLimit - thresholdQueueLimit) / m_queueLimit) * (reverseInitPmark) + (nQueued / m_queueLimit) * (1 - (m_queueLimit - thresholdQueueLimit)) * (reverseInitPmark);
       m_lastUpdateTime = now;
     }
   else
   {
-    m_Pmark = 1.0;
+    m_Pmark = 0.0;
     m_lastUpdateTime = now;
   }
 }
